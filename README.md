@@ -43,8 +43,12 @@ Go to /
 → http://localhost:8000/
 → Returns: "GHL Token Manager is running. Go to /auth to begin."
 
-Visit /auth
+Visit /auth(http://127.0.0.1:8000/auth
+)
 → Redirects to GHL’s location selection
+
+Remember:
+You are not logged in to marketplace
 
 After clicking Proceed
 → GHL redirects to /auth/callback?code=...
@@ -67,7 +71,8 @@ You'll see logs like:
 🔁 Scheduler started for refreshing token every 23 hours.
 🔗 API Endpoints
 Method	Endpoint	Description
-GET	/	Health check message
-GET	/auth	Begins OAuth login flow
-GET	/auth/callback	Handles GHL redirect & token save
+GET	/	Health check message(http://127.0.0.1:8000)
+GET	/auth	Begins OAuth login flow(http://127.0.0.1:8000/auth
+)
+GET	/auth/callback	Handles GHL redirect & token save()
 GET	/token	Returns current access token
