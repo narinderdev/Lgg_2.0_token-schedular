@@ -26,10 +26,6 @@ async def startup_event():
 def root():
     return {"message": "GHL Token Manager is running. Go to /auth to begin."}
 
-@app.get("/token")
-def read_token():
-    token = get_token()
-    return {"access_token": token} if token else {"error": "Token not available"}
 
 @app.get("/auth")
 def redirect_to_ghl():
@@ -52,6 +48,7 @@ def auth_callback(request: Request):
     if not code:
         return HTMLResponse("<h3>❌ Authorization code missing</h3>", status_code=400)
 
+    # Prepare payload to exchange code for token
     payload = {
         "grant_type": "authorization_code",
         "client_id": os.getenv("GHL_CLIENT_ID"),
@@ -61,19 +58,52 @@ def auth_callback(request: Request):
     }
 
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
+
     response = requests.post(os.getenv("GHL_TOKEN_URL"), data=payload, headers=headers)
 
     if response.status_code == 200:
         tokens = response.json()
         access_token = tokens["access_token"]
         refresh_token = tokens["refresh_token"]
+        print("🔐 Full Token Response:")
+        print(tokens)
 
-        with open(".env", "a") as f:
-            f.write(f"\nGHL_REFRESH_TOKEN={refresh_token}")
+        # ✅ Log the refresh token separately
+        print("🔁 Refresh Token:")
+        print(refresh_token)
+        # ✅ Overwrite existing .env entry
+        # Read existing lines
+        lines = []
+        if os.path.exists(".env"):
+            with open(".env", "r") as file:
+                lines = file.readlines()
 
+        # Replace or add GHL_REFRESH_TOKEN line
+        with open(".env", "w") as file:
+            replaced = False
+            for line in lines:
+                if line.startswith("GHL_REFRESH_TOKEN="):
+                    file.write(f"GHL_REFRESH_TOKEN={refresh_token}\n")
+                    replaced = True
+                else:
+                    file.write(line)
+            if not replaced:
+                file.write(f"\nGHL_REFRESH_TOKEN={refresh_token}\n")
+
+        # ✅ Reload env and start scheduler
         load_dotenv(override=True)
         start_scheduler()
 
-        return HTMLResponse(f"<h3>✅ Authorization successful!</h3><p>Refresh token saved. You may close this window.</p>")
-    else:
-        return HTMLResponse(f"<h3>❌ Token exchange failed</h3><p>{response.json()}</p>", status_code=400)
+        return HTMLResponse(f"""
+            <h3>✅ Authorization successful!</h3>
+            <p><strong>Access token acquired and refresh token saved.</strong></p>
+            <p>You may now close this window.</p>
+        """)
+
+    return HTMLResponse(f"<h3>❌ Token exchange failed</h3><p>{response.json()}</p>", status_code=400)
+
+
+@app.get("/token")
+def read_token():
+    token = get_token()
+    return {"access_token": token} if token else {"error": "Token not available"}

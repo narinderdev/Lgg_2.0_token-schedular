@@ -15,6 +15,26 @@ def is_token_valid():
 
 def get_token():
     return TOKEN_DATA["access_token"] if is_token_valid() else None
+def _update_env_refresh_token(new_token):
+    """Update the refresh token in the .env file (overwrite existing value)."""
+    lines = []
+    if os.path.exists(".env"):
+        with open(".env", "r") as f:
+            lines = f.readlines()
+
+    with open(".env", "w") as f:
+        found = False
+        for line in lines:
+            if line.startswith("GHL_REFRESH_TOKEN="):
+                f.write(f"GHL_REFRESH_TOKEN={new_token}\n")
+                found = True
+            else:
+                f.write(line)
+        if not found:
+            f.write(f"\nGHL_REFRESH_TOKEN={new_token}\n")
+
+    print("🔁 .env file updated with new refresh token")
+    load_dotenv(override=True)  # Refresh env vars
 
 async def refresh_access_token():
     url = os.getenv("GHL_TOKEN_URL")
@@ -38,8 +58,12 @@ async def refresh_access_token():
         except httpx.HTTPStatusError:
             print("❌ Response text:", response.text)
             raise
-
         data = response.json()
         TOKEN_DATA["access_token"] = data["access_token"]
         TOKEN_DATA["expires_at"] = time.time() + data["expires_in"] - 60
         print("✅ Access token refreshed!")
+
+        # ✅ Update refresh token if it's returned (important!)
+        if "refresh_token" in data:
+            refresh_token = data["refresh_token"]
+            _update_env_refresh_token(refresh_token)
