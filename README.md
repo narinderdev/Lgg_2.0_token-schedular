@@ -17,6 +17,7 @@ cd LGG\ 2.0
 python -m venv venv
 source venv/bin/activate   # or venv\Scripts\activate on Windows
 pip install -r requirements.txt
+
 2. Fill in .env file
 Create a .env file at the root with the following:
 GHL_CLIENT_ID=your_client_id
@@ -25,54 +26,34 @@ GHL_TOKEN_URL=https://services.leadconnectorhq.com/oauth/token
 GHL_REDIRECT_URI=https://your-ngrok-id.ngrok-free.app/auth/callback
 ⚠️ Leave GHL_REFRESH_TOKEN empty for now. It will be populated after first auth.
 
-3. Start FastAPI app
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+3.🧑‍💻 Running the Application
+uvicorn main:app --reload
 
-4. Start ngrok
-In a separate terminal:
-
+4.Then start an ngrok tunnel:
 ngrok http 8000
-Copy the HTTPS forwarding URL and update .env:
-GHL_REDIRECT_URI=https://your-ngrok-id.ngrok-free.app/auth/callback
+Copy the HTTPS URL and update it in your **.env** and **LeadConnector App Settings** as the redirect URI.
 
-5. Configure Redirect URI in GHL
-Go to your GHL Developer Dashboard and add the same redirect URI:
-https://your-ngrok-id.ngrok-free.app/auth/callback
-✅ OAuth Flow
-Go to /
-→ http://localhost:8000/
-→ Returns: "GHL Token Manager is running. Go to /auth to begin."
+3.Begin OAuth Flow
 
-Visit /auth(http://127.0.0.1:8000/auth
-)
-→ Redirects to GHL’s location selection
+Visit: https://<ngrok-url>/auth or (http://127.0.0.1:8000/auth)
 
-Remember:
-You are not logged in to marketplace
+Click Proceed after selecting your location
 
-After clicking Proceed
-→ GHL redirects to /auth/callback?code=...
+Redirects to /auth/callback with the code param
 
-main.py handles the code
-→ Sends POST to GHL to exchange for access + refresh token
-→ Saves refresh token to .env
-→ Scheduler starts for auto-refresh
+Success
 
-⏱️ Scheduled Job
-Once the initial token is received, the app automatically starts a job using APScheduler that:
+Refresh token is stored to .env
 
-Runs every 23 hours
-
-Refreshes the access token using the saved refresh token
-
-You'll see logs like:
-
+Scheduler starts automatically:
 ✅ Access token refreshed!
 🔁 Scheduler started for refreshing token every 23 hours.
-🔗 API Endpoints
-Method	Endpoint	Description
-GET	/	Health check message(http://127.0.0.1:8000)
-GET	/auth	Begins OAuth login flow(http://127.0.0.1:8000/auth
-)
-GET	/auth/callback	Handles GHL redirect & token save()
-GET	/token	Returns current access token
+Get Current Access Token
+
+GET /token
+🔁 Automatic Token Refresh
+A background job runs every 23 hours
+
+Refreshes the access token using the stored GHL_REFRESH_TOKEN
+
+Updates .env if a new refresh token is issued
