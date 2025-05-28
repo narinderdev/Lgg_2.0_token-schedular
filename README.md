@@ -11,17 +11,6 @@ Refreshing the access token every 23 hours
 
 Exposing useful endpoints (/, /auth, /auth/callback, /token)
 
-📁 Project Structure
-LGG 2.0/
-│
-├── .env                    # Environment variables (client_id, secret, etc.)
-├── Dockerfile              # (Optional) Container setup
-├── main.py                 # FastAPI entry point and OAuth logic
-├── requirements.txt        # Python dependencies
-├── scheduler.py            # APScheduler job to refresh token every 23 hours
-├── token_manager.py        # Logic for refresh + token persistence
-└── venv/                   # Python virtual environment
-
 1. Clone and install dependencies
 git clone <your-repo-url>
 cd LGG\ 2.0
