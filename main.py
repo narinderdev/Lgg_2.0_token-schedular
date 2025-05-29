@@ -48,7 +48,6 @@ def auth_callback(request: Request):
     if not code:
         return HTMLResponse("<h3>❌ Authorization code missing</h3>", status_code=400)
 
-    # Prepare payload to exchange code for token
     payload = {
         "grant_type": "authorization_code",
         "client_id": os.getenv("GHL_CLIENT_ID"),
@@ -58,27 +57,25 @@ def auth_callback(request: Request):
     }
 
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
-
     response = requests.post(os.getenv("GHL_TOKEN_URL"), data=payload, headers=headers)
 
     if response.status_code == 200:
         tokens = response.json()
         access_token = tokens["access_token"]
         refresh_token = tokens["refresh_token"]
+        expires_in = tokens.get("expires_in", 86399)  # fallback
+
         print("🔐 Full Token Response:")
         print(tokens)
-
-        # ✅ Log the refresh token separately
         print("🔁 Refresh Token:")
         print(refresh_token)
-        # ✅ Overwrite existing .env entry
-        # Read existing lines
+
+        # Save refresh token to .env
         lines = []
         if os.path.exists(".env"):
             with open(".env", "r") as file:
                 lines = file.readlines()
 
-        # Replace or add GHL_REFRESH_TOKEN line
         with open(".env", "w") as file:
             replaced = False
             for line in lines:
@@ -90,9 +87,11 @@ def auth_callback(request: Request):
             if not replaced:
                 file.write(f"\nGHL_REFRESH_TOKEN={refresh_token}\n")
 
-        # ✅ Reload env and start scheduler
+        # Reload .env and start scheduler using actual expiration
         load_dotenv(override=True)
-        start_scheduler()
+        # Refresh 60 seconds before actual expiration
+        interval = max(expires_in - 60, 3600)  # ensure at least 1 hour
+        start_scheduler(interval)
 
         return HTMLResponse(f"""
             <h3>✅ Authorization successful!</h3>
@@ -101,7 +100,6 @@ def auth_callback(request: Request):
         """)
 
     return HTMLResponse(f"<h3>❌ Token exchange failed</h3><p>{response.json()}</p>", status_code=400)
-
 
 @app.get("/token")
 def read_token():
