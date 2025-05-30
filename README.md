@@ -35,7 +35,7 @@ Copy the HTTPS URL and update it in your **.env** and **LeadConnector App Settin
 
 3.Begin OAuth Flow
 
-Visit: https://<ngrok-url>/auth or (http://127.0.0.1:8000/auth)
+Visit: https://<ngrok-url> or (http://127.0.0.1:8000/)
 
 Click Proceed after selecting your location
 
@@ -50,7 +50,7 @@ Scheduler starts automatically:
 🔁 Scheduler started for refreshing token every 23 hours.
 Get Current Access Token
 
-GET /token
+GET /get-refresh-token
 🔁 Automatic Token Refresh
 A background job runs every 23 hours
 

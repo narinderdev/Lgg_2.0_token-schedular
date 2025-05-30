@@ -37,7 +37,24 @@ def redirect_to_ghl():
     base_url = "https://marketplace.leadconnectorhq.com/oauth/chooselocation"
     client_id = os.getenv("GHL_CLIENT_ID")
     redirect_uri = os.getenv("GHL_REDIRECT_URI")
-    scopes = "contacts.readonly calendars.readonly campaigns.readonly"
+
+    scopes = (
+        "businesses.read businesses.write calendars.read calendars.write "
+        "events.read events.write groups.read groups.write resources.read resources.write "
+        "campaigns.read conversations.read conversations.write "
+        "message.read message.write reports.read livechat.write contacts.read contacts.write "
+        "objects.read objects.write schema.read schema.write record.read record.write "
+        "associations.read associations.write relation.read relation.write "
+        "courses.read courses.write forms.read forms.write invoices.read invoices.write "
+        "schedule.read schedule.write template.read template.write estimate.read estimate.write "
+        "links.read links.write lc-email.read locations.read customValues.read customValues.write "
+        "customFields.read customFields.write tasks.read tasks.write tags.read tags.write "
+        "templates.read medias.read medias.write funnels.read redirect.read redirect.write "
+        "page.read pagecount.read funnel.read opportunities.read opportunities.write "
+        "payments.read orders.read orders.write integration.read integration.write "
+        "transactions.read subscriptions.read coupons.read coupons.write "
+        "custom-provider.read custom-provider.write products.read"
+    )
 
     redirect_url = (
         f"{base_url}?response_type=code"
