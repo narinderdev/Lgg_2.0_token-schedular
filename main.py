@@ -7,6 +7,7 @@ from fastapi.responses import RedirectResponse
 from scheduler import start_scheduler
 from token_manager import refresh_access_token, get_token
 from fastapi.responses import HTMLResponse
+from fastapi.responses import JSONResponse
 load_dotenv()
 app = FastAPI()
 
@@ -103,7 +104,28 @@ def auth_callback(request: Request):
         return HTMLResponse(html_content)
 
     return HTMLResponse(f"<h3>❌ Token exchange failed</h3><p>{response.json()}</p>", status_code=400)
+
 @app.get("/token")
 def read_token():
     token = get_token()
     return {"access_token": token} if token else {"error": "Token not available"}
+
+@app.get("/get-refresh-token")
+async def get_refresh_token():
+    try:
+        await refresh_access_token()
+        from token_manager import get_token  # refresh updates in memory
+        return JSONResponse(
+            {
+                "success": True,
+                "access_token": get_token()
+            }
+        )
+    except Exception as e:
+        return JSONResponse(
+            {
+                "success": False,
+                "error": str(e)
+            },
+            status_code=500
+        )
